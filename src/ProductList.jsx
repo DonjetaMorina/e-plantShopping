@@ -1,25 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux'; // ✅ Added useSelector
+import { useDispatch, useSelector } from 'react-redux'; 
 import { addItem } from './CartSlice'; 
 import './ProductList.css';
 import CartItem from './CartItem';
 
 function ProductList({ onHomeClick }) {
-    // Initialize Redux dispatch
     const dispatch = useDispatch(); 
 
-    // ✅ Access the Redux store to track global cart item entries
+    // Access global Redux cart store directly
     const cartItems = useSelector(state => state.cart.items);
 
-    // State hooks for navigation panel views
+    // State hooks for navigation panels
     const [showCart, setShowCart] = useState(false);
     const [showPlants, setShowPlants] = useState(false); 
-    const [addedToCart, setAddedToCart] = useState({});
-
-    // ✅ Calculation logic provided by your prompt for tracking total items
-    const calculateTotalQuantity = () => { 
-        return cartItems ? cartItems.reduce((total, item) => total + item.quantity, 0) : 0; 
-    };
 
     // Plant Data Directory Array
     const plantsArray = [
@@ -211,7 +204,7 @@ function ProductList({ onHomeClick }) {
                 {
                     name: "Cast Iron Plant",
                     image: "https://cdn.pixabay.com/photo/2017/02/16/18/04/cast-iron-plant-2072008_1280.jpg",
-                    description: "Hardy plant that tolerates low light and neglect.",
+                    description: "Hardy plant that treats low light and neglect.",
                     cost: "$20"
                 },
                 {
@@ -230,7 +223,7 @@ function ProductList({ onHomeClick }) {
         }
     ];
 
-    // CSS style configurations
+    // Navigation styles
     const styleObj = {
         backgroundColor: '#4CAF50',
         color: '#fff!important',
@@ -252,7 +245,6 @@ function ProductList({ onHomeClick }) {
         textDecoration: 'none',
     };
 
-    // Navigation triggers
     const handleHomeClick = (e) => {
         e.preventDefault();
         onHomeClick();
@@ -274,18 +266,16 @@ function ProductList({ onHomeClick }) {
         setShowCart(false);
     };
 
-    // Add To Cart handler linking both Redux dispatch actions and button lock styles
+    const calculateTotalQuantity = () => { 
+        return cartItems ? cartItems.reduce((total, item) => total + item.quantity, 0) : 0; 
+    };
+
     const handleAddToCart = (product) => {
         dispatch(addItem(product)); 
-        setAddedToCart((prevState) => ({ 
-            ...prevState, 
-            [product.name]: true, 
-        }));
     };
 
     return (
         <div>
-            {/* Header Navigation Structure */}
             <div className="navbar" style={styleObj}>
                 <div className="tag">
                     <div className="luxury">
@@ -309,8 +299,6 @@ function ProductList({ onHomeClick }) {
                                     <circle cx="184" cy="216" r="12"></circle>
                                     <path d="M42.3,72H221.7l-26.4,92.4A15.9,15.9,0,0,1,179.9,176H84.1a15.9,15.9,0,0,1-15.4-11.6L32.5,37.8A8,8,0,0,0,24.8,32H8" fill="none" stroke="#faf9f9" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" id="mainIconPathAttribute"></path>
                                 </svg>
-                                
-                                {/* ✅ Task 4 Requirement: Real-time Item quantity indicator badge */}
                                 {calculateTotalQuantity() > 0 && (
                                     <span className="cart-quantity-badge">{calculateTotalQuantity()}</span>
                                 )}
@@ -320,34 +308,41 @@ function ProductList({ onHomeClick }) {
                 </div>
             </div>
 
-            {/* Layout view router display */}
             {!showCart ? (
                 <div className="product-grid">
                     {plantsArray.map((category, index) => ( 
                         <div key={index}> 
-                            <h1>
-                                <div>{category.category}</div> 
-                            </h1>
+                            {/* ✅ CSS FIX: Added styling layout for category headings to match photo 2 */}
+                            <div className="category_heading">
+                                <h1>{category.category}</h1>
+                            </div>
+                            
                             <div className="product-list"> 
-                                {category.plants.map((plant, plantIndex) => ( 
-                                    <div className="product-card" key={plantIndex}> 
-                                        <img 
-                                            className="product-image" 
-                                            src={plant.image} 
-                                            alt={plant.name} 
-                                        />
-                                        <div className="product-title">{plant.name}</div> 
-                                        <div className="product-description">{plant.description}</div> 
-                                        <div className="product-cost">{plant.cost}</div> 
-                                        <button
-                                            className="product-button"
-                                            disabled={addedToCart[plant.name]} 
-                                            onClick={() => handleAddToCart(plant)} 
-                                        >
-                                            {addedToCart[plant.name] ? 'Added to Cart' : 'Add to Cart'}
-                                        </button>
-                                    </div>
-                                ))}
+                                {category.plants.map((plant, plantIndex) => {
+                                    // ✅ GLOBAL REDUX BUTTON LOCK FIX:
+                                    // Check if this plant is currently inside the global Redux store items array
+                                    const isItemInCart = cartItems.some(item => item.name === plant.name);
+
+                                    return (
+                                        <div className="product-card" key={plantIndex}> 
+                                            <img 
+                                                className="product-image" 
+                                                src={plant.image} 
+                                                alt={plant.name} 
+                                            />
+                                            <div className="product-title">{plant.name}</div> 
+                                            <div className="product-description">{plant.description}</div> 
+                                            <div className="product-cost">{plant.cost}</div> 
+                                            <button
+                                                className="product-button"
+                                                disabled={isItemInCart} // Disables if found in Redux cart
+                                                onClick={() => handleAddToCart(plant)} 
+                                            >
+                                                {isItemInCart ? 'Added to Cart' : 'Add to Cart'}
+                                            </button>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
                     ))}
