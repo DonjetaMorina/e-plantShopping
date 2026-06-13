@@ -1,21 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { useDispatch } from 'react-redux'; 
-import { addItem } from './CartSlice'; // Imported the addItem reducer from CartSlice.jsx
+import { useDispatch, useSelector } from 'react-redux'; // ✅ Added useSelector
+import { addItem } from './CartSlice'; 
 import './ProductList.css';
 import CartItem from './CartItem';
 
 function ProductList({ onHomeClick }) {
-    // Initialize the Redux dispatch hook
+    // Initialize Redux dispatch
     const dispatch = useDispatch(); 
 
-    // State hooks for navigation and cart view tracking
+    // ✅ Access the Redux store to track global cart item entries
+    const cartItems = useSelector(state => state.cart.items);
+
+    // State hooks for navigation panel views
     const [showCart, setShowCart] = useState(false);
     const [showPlants, setShowPlants] = useState(false); 
-    
-    // State hook to track which products are added to the cart
     const [addedToCart, setAddedToCart] = useState({});
 
-    // The Plant Data Array containing categories, names, image URLs, descriptions, and costs
+    // ✅ Calculation logic provided by your prompt for tracking total items
+    const calculateTotalQuantity = () => { 
+        return cartItems ? cartItems.reduce((total, item) => total + item.quantity, 0) : 0; 
+    };
+
+    // Plant Data Directory Array
     const plantsArray = [
         {
             category: "Air Purifying Plants",
@@ -224,7 +230,7 @@ function ProductList({ onHomeClick }) {
         }
     ];
 
-    // Navigation and styling objects
+    // CSS style configurations
     const styleObj = {
         backgroundColor: '#4CAF50',
         color: '#fff!important',
@@ -246,6 +252,7 @@ function ProductList({ onHomeClick }) {
         textDecoration: 'none',
     };
 
+    // Navigation triggers
     const handleHomeClick = (e) => {
         e.preventDefault();
         onHomeClick();
@@ -267,19 +274,18 @@ function ProductList({ onHomeClick }) {
         setShowCart(false);
     };
 
-    // Add to Cart Functionality matching prompt layout exactly
+    // Add To Cart handler linking both Redux dispatch actions and button lock styles
     const handleAddToCart = (product) => {
-        dispatch(addItem(product)); // Dispatch the action to add the product to the cart (Redux action)
-
-        setAddedToCart((prevState) => ({ // Update the local state to reflect that the product has been added
-            ...prevState, // Spread the previous state to retain existing entries
-            [product.name]: true, // Set the current product's name as a key with value 'true' to mark it as added
+        dispatch(addItem(product)); 
+        setAddedToCart((prevState) => ({ 
+            ...prevState, 
+            [product.name]: true, 
         }));
     };
 
     return (
         <div>
-            {/* Header / Navigation Bar */}
+            {/* Header Navigation Structure */}
             <div className="navbar" style={styleObj}>
                 <div className="tag">
                     <div className="luxury">
@@ -303,36 +309,40 @@ function ProductList({ onHomeClick }) {
                                     <circle cx="184" cy="216" r="12"></circle>
                                     <path d="M42.3,72H221.7l-26.4,92.4A15.9,15.9,0,0,1,179.9,176H84.1a15.9,15.9,0,0,1-15.4-11.6L32.5,37.8A8,8,0,0,0,24.8,32H8" fill="none" stroke="#faf9f9" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" id="mainIconPathAttribute"></path>
                                 </svg>
+                                
+                                {/* ✅ Task 4 Requirement: Real-time Item quantity indicator badge */}
+                                {calculateTotalQuantity() > 0 && (
+                                    <span className="cart-quantity-badge">{calculateTotalQuantity()}</span>
+                                )}
                             </h1>
                         </a>
                     </div>
                 </div>
             </div>
 
-            {/* Main view toggle conditional */}
+            {/* Layout view router display */}
             {!showCart ? (
-                /* CRITICAL: Code placed strictly within a div matching class name product-grid */
                 <div className="product-grid">
-                    {plantsArray.map((category, index) => ( // Loop through each category in plantsArray
+                    {plantsArray.map((category, index) => ( 
                         <div key={index}> 
                             <h1>
-                                <div>{category.category}</div> {/* Display the category name */}
+                                <div>{category.category}</div> 
                             </h1>
-                            <div className="product-list"> {/* Container for the list of plant cards */}
-                                {category.plants.map((plant, plantIndex) => ( // Loop through each plant in the current category
-                                    <div className="product-card" key={plantIndex}> {/* Unique key for each plant card */}
+                            <div className="product-list"> 
+                                {category.plants.map((plant, plantIndex) => ( 
+                                    <div className="product-card" key={plantIndex}> 
                                         <img 
                                             className="product-image" 
-                                            src={plant.image} // Display the plant image
-                                            alt={plant.name} // Alt text for accessibility
+                                            src={plant.image} 
+                                            alt={plant.name} 
                                         />
-                                        <div className="product-title">{plant.name}</div> {/* Display plant name */}
-                                        <div className="product-description">{plant.description}</div> {/* Display plant description */}
-                                        <div className="product-cost">{plant.cost}</div> {/* Display plant cost directly */}
+                                        <div className="product-title">{plant.name}</div> 
+                                        <div className="product-description">{plant.description}</div> 
+                                        <div className="product-cost">{plant.cost}</div> 
                                         <button
                                             className="product-button"
-                                            disabled={addedToCart[plant.name]} // Disables button automatically when selected
-                                            onClick={() => handleAddToCart(plant)} // Handle adding plant to cart
+                                            disabled={addedToCart[plant.name]} 
+                                            onClick={() => handleAddToCart(plant)} 
                                         >
                                             {addedToCart[plant.name] ? 'Added to Cart' : 'Add to Cart'}
                                         </button>
